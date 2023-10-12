@@ -1,0 +1,1837 @@
+-------------------------------------------------------------------------------------------------------------------------------
+
+Title: IODP Expedition XRF Analysis
+Authors: Claudio Robustelli Test, Ravi Kiran Koorapati
+-------------------------------------------------------------------------------------------------------------------------------
+
+# Make code replicable
+  
+This little bit here uses `renv`, a package that organises other packages and
+makes sure that the correct version is installed based on what you use to write
+the code. It's useful for the various times when packages are updated and things
+either work differently or not at all.
+
+We ran these analyses using R version 4.2.1 and the packages and version saved by
+`renv`. You may need to update.
+
+`renv` stores the package versions in a *lockfile* that is automatically loaded
+when you start R in this folder. If it doesn't load, or you need to update then
+use the following command to initialize (I would suggest to run the following code either way).
+
+```{r eval = FALSE}
+renv::init()
+renv::upgrade()
+renv::update()
+```
+
+
+# Loading necessary libraries for analysis
+
+```{r load_data}
+library(tidyverse)
+library(yaml)
+library(ggrepel)
+library(corrplot)
+library(RColorBrewer)
+library(nlme)
+library(factoextra)
+library(patchwork)
+library(vegan)
+library(viridis)
+library(ggplot2)
+library(zoo)
+library(plyr)
+library(na.tools)
+library(scales)
+library(stringr)
+library(readxl)
+library(dplyr)
+library(ggpubr)
+```
+
+# Loading Magnetic suspectibility (MS) data
+Splice Magnetic susceptibility data from all sites are loaded for analysis. The columns from these imported dataset are renamed.
+
+```{r load MS data}
+
+## U1556
+
+U1556ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1556ms.data<-U1556ms.data[,c(1:11)] #select only useful column
+colnames(U1556ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+## U1557
+U1557ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1557ms.data<-U1557ms.data[,c(1:11)] #select only useful column
+colnames(U1557ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+## U1558
+U1558ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1558ms.data<-U1558ms.data[,c(1:11)] #select only useful column
+colnames(U1558ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+## U1559
+U1559ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1559ms.data<-U1559ms.data[,c(1:11)] #select only usefull column
+colnames(U1559ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+##U1560
+U1560ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1560ms.data<-U1560ms.data[,c(1:11)] #select only useful column
+colnames(U1560ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+## U1561
+U1561ms.data <- read_xlsx(file.choose())  #import ms data in xlsx format
+U1561ms.data<-U1561ms.data[,c(1:11)] #select only usefull column
+colnames(U1561ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #rename column in ms.data
+
+## U1583
+U1583ms.data <- read_xlsx(file.choose())  #Import ms data in .xlsx format
+U1583ms.data<-U1583ms.data[,c(1:11)] #Select only useful column
+colnames(U1583ms.data) <- c('exp','site','hole','cor','Type','sect','A.W', 'offSet','depth.A','depth.CCSF',
+                              'ms') #Rename columns in ms.data
+
+```
+
+# Loading Natural gamma radiation (NGR) data
+Splice NGR data from all sites are loaded for analysis. The columns from these imported dataset are renamed.
+
+```{r load NGR data}
+
+## U1556
+U1556ngr.data <- read_xlsx(file.choose())  #import ngr data in xlsx format
+U1556ngr.data<-U1556ngr.data[,c(1:15)] #select only useful column
+colnames(U1556ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename columns in ngr data
+
+## U1557
+U1557ngr.data <- read_xlsx(file.choose())  #import NGR data in xlsx format
+U1557ngr.data<-U1557ngr.data[,c(1:15)] #select only useful column
+colnames(U1557ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+
+## U1558
+U1558ngr.data <- read_xlsx(file.choose())  #import ngr data in xlsx format
+U1558ngr.data<-U1558ngr.data[,c(1:15)] #select only useful column
+colnames(U1558ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+
+## U1559
+U1559ngr.data <- read_xlsx(file.choose())  #import NGR data in xlsx format
+U1559ngr.data<-U1559ngr.data[,c(1:15)] #select only useful column
+colnames(U1559ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+## U1560
+U1560ngr.data <- read_xlsx(file.choose())  #import ngr data in xlsx format
+U1560ngr.data<-U1560ngr.data[,c(1:15)] #select only usefull column
+colnames(U1560ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+
+## U1561
+U1561ngr.data <- read_xlsx(file.choose())  #import ngr data in xlsx format
+U1561ngr.data<-U1561ngr.data[,c(1:15)] #select only useful column
+colnames(U1561ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF',
+                       'ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+
+## U1583
+U1583ngr.data <- read_xlsx(file.choose())  #Import NGR data in .xlsx format
+U1583ngr.data <- U1583ngr.data[,c(1:15)] #select only useful column
+colnames(U1583ngr.data) <- c('exp','site','hole','cor','Type','sect', 'offSet','depth.A','depth.CCSF','ngr.tot', 'ngr.k', 'ngr.u','ngr.th', 'err', 'rel.err') #rename column in ngr data
+
+```
+
+# Loading X-Ray fluroscence (XRF) data
+Splice XRF data from all sites are loaded for analysis. The columns from these imported dataset are renamed.
+
+```{r load XRF data}
+
+## U1556
+U1556xrf.data_10kV <- read.csv(file.choose())  #import xrf 10kV data in CSV format
+U1556xrf.data_10kV<-U1556xrf.data_10kV[,c(1:10,20:35)] #select only usefull column
+colnames(U1556xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+U1556xrf.data_10kV<-subset(U1556xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1556xrf.data_10kV<-arrange(U1556xrf.data_10kV, depth.CCSF)#reorder dataframe for CCSD depth
+
+U1556xrf.data_30kV <- read.csv(file.choose())  #import xrf 30kV data in CSV format
+U1556xrf.data_30kV<-U1556xrf.data_30kV[,c(1:10,20:41)] #select only useful column
+colnames(U1556xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1556xrf.data_30kV<-subset(U1556xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1556xrf.data_30kV<-arrange(U1556xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1556xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1556xrf.data_50kV<-U1556xrf.data_50kV[,c(1:10,20:34)] #select only useful column
+colnames(U1556xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1556xrf.data_50kV<-subset(U1556xrf.data_50kV, tot_count > 0)
+U1556xrf.data_50kV<-arrange(U1556xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1556xrf_10_30kV<-full_join(U1556xrf.data_10kV,U1556xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1556xrf_10_30kV_50kV<-full_join(U1556xrf_10_30kV,U1556xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+
+## U1557
+U1557xrf.data_10kV <- read.csv(file.choose())  #import xrf 10kV data in CSV format
+U1557xrf.data_10kV<-U1557xrf.data_10kV[,c(1:10,20:35)] #select only useful column
+colnames(U1557xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+U1557xrf.data_10kV<-subset(U1557xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1557xrf.data_10kV<-arrange(U1557xrf.data_10kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+
+
+U1557xrf.data_30kV <- read.csv(file.choose())  #import xrf 30kV data in CSV format
+U1557xrf.data_30kV<-U1557xrf.data_30kV[,c(1:10,20:41)] #select only useful column
+colnames(U1557xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1557xrf.data_30kV<-subset(U1557xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1557xrf.data_30kV<-arrange(U1557xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+
+
+U1557xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1557xrf.data_50kV<-U1557xrf.data_50kV[,c(1:10,20:34)] #select only useful column
+colnames(U1557xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1557xrf.data_50kV<-subset(U1557xrf.data_50kV, tot_count > 0)
+U1557xrf.data_50kV<-arrange(U1557xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+
+U1557xrf_10_30kV<-full_join(U1557xrf.data_10kV,U1557xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1557xrf_10_30kV_50kV<-full_join(U1557xrf_10_30kV,U1557xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+## U1558
+U1558xrf.data_10kV <- read_xlsx(file.choose())  #import xrf 10kV data in CSV format
+U1558xrf.data_10kV<-U1558xrf.data_10kV[,c(1:10,20:35)] #select only useful column
+colnames(U1558xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+
+U1558xrf.data_10kV<-subset(U1558xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1558xrf.data_10kV<-arrange(U1558xrf.data_10kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1558xrf.data_30kV <- read_xlsx(file.choose())  #import xrf 30kV data in CSV format
+U1558xrf.data_30kV<-U1558xrf.data_30kV[,c(1:10,20:41)] #select only useful column
+colnames(U1558xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1558xrf.data_30kV<-subset(U1558xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1558xrf.data_30kV<-arrange(U1558xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1558xrf.data_50kV <- read_xlsx(file.choose())  #import xrf 50kV data in CSV format
+U1558xrf.data_50kV<-U1558xrf.data_50kV[,c(1:10,20:34)] #select only usefull column
+colnames(U1558xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1558xrf.data_50kV<-subset(U1558xrf.data_50kV, tot_count > 0)
+U1558xrf.data_50kV<-arrange(U1558xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1558xrf_10_30kV<-full_join(U1558xrf.data_10kV,U1558xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1558xrf_10_30kV_50kV<-full_join(U1558xrf_10_30kV,U1558xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+U1558xrf_10_30kV_50kV_1 <- na.rm(U1558xrf_10_30kV_50kV) ## Removing any NA values
+
+## U1559
+U1559xrf.data_10kV <- read.csv(file.choose())  #import xrf 10kV data in CSV format
+U1559xrf.data_10kV<-U1559xrf.data_10kV[,c(1:10,20:35)] #select only useful column
+colnames(U1559xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+U1559xrf.data_10kV<-subset(U1559xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1559xrf.data_10kV<-arrange(U1559xrf.data_10kV, depth.CCSF)#reorder dataframe for CCSD depth
+
+U1559xrf.data_30kV <- read.csv(file.choose())  #import xrf 30kV data in CSV format
+U1559xrf.data_30kV<-U1559xrf.data_30kV[,c(1:10,20:41)] #select only useful column
+colnames(U1559xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1559xrf.data_30kV<-subset(U1559xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1559xrf.data_30kV<-arrange(U1559xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1559xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1559xrf.data_50kV<-U1559xrf.data_50kV[,c(1:10,20:34)] #select only usefull column
+colnames(U1559xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1559xrf.data_50kV<-subset(U1559xrf.data_50kV, tot_count > 0)
+U1559xrf.data_50kV<-arrange(U1559xrf.data_50kV, depth.CCSF)#reorder dataframe for CCSD depth
+
+U1559xrf_10_30kV<-full_join(U1559xrf.data_10kV,U1559xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1559xrf_10_30kV_50kV<-full_join(U1559xrf_10_30kV,U1559xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+## U1560
+U1560xrf.data_10kV <- read.csv(file.choose())  #import xrf 10kV data in CSV format
+U1560xrf.data_10kV<-U1560xrf.data_10kV[,c(1:10,20:35)] #select only useful column
+colnames(U1560xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+U1560xrf.data_10kV<-subset(U1560xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1560xrf.data_10kV<-arrange(U1560xrf.data_10kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1560xrf.data_30kV <- read.csv(file.choose())  #import xrf 30kV data in CSV format
+U1560xrf.data_30kV<-U1560xrf.data_30kV[,c(1:10,20:41)] #select only useful column
+colnames(U1560xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1560xrf.data_30kV<-subset(U1560xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1560xrf.data_30kV<-arrange(U1560xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+
+U1560xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1560xrf.data_50kV<-U1560xrf.data_50kV[,c(1:10,20:34)] #select only useful column
+colnames(U1560xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1560xrf.data_50kV<-subset(U1560xrf.data_50kV, tot_count > 0)
+U1560xrf.data_50kV<-arrange(U1560xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1560xrf_10_30kV<-full_join(U1560xrf.data_10kV,U1560xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1560xrf_10_30kV_50kV<-full_join(U1560xrf_10_30kV,U1560xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+U1560xrf_10_30kV_50kV_1 <- na.rm(U1560xrf_10_30kV_50kV) ### Removing any NA values
+
+## U1561
+U1561xrf.data_10kV <- read.csv(file.choose())  #import xrf 10kV data in CSV format
+U1561xrf.data_10kV<-U1561xrf.data_10kV[,c(1:10,20:35)] #select only useful column
+colnames(U1561xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+U1561xrf.data_10kV<-subset(U1561xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1561xrf.data_10kV<-arrange(U1561xrf.data_10kV, depth.CCSF)#reorder dataframe for CCSD depth
+
+U1561xrf.data_30kV <- read.csv(file.choose())  #import xrf 30kV data in CSV format
+U1561xrf.data_30kV<-U1561xrf.data_30kV[,c(1:10,20:41)] #select only usefull column
+colnames(U1561xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1561xrf.data_30kV<-subset(U1561xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1561xrf.data_30kV<-arrange(U1561xrf.data_30kV, depth.CCSF)#reorder dataframe for CCSD depth
+
+U1561xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1561xrf.data_50kV<-U1561xrf.data_50kV[,c(1:10,20:34)] #select only usefull column
+colnames(U1561xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1561xrf.data_50kV<-subset(U1561xrf.data_50kV, tot_count > 0)
+U1561xrf.data_50kV<-arrange(U1561xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1561xrf_10_30kV<-full_join(U1561xrf.data_10kV,U1561xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1561xrf_10_30kV_50kV<-full_join(U1561xrf_10_30kV,U1561xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))  ### combining the data sheets from different voltages into a single sheet 
+
+## U1583
+U1583xrf.data_10kV <- read.csv(file.choose())  #Import XRF 10kV data in CSV format
+U1583xrf.data_10kV <- U1583xrf.data_10kV[,c(1:10,20:35)] #select useful columns
+colnames(U1583xrf.data_10kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Mg.Ka.Area_10kV', 'Al.Ka.Area_10kV', 'Si.Ka.Area_10kV',
+                             'P.Ka.Area_10kV','S.Ka.Area_10kV', 'Cl.Ka.Area_10kV', 'Ar.Ka.Area_10kV',
+                             'K.Ka.Area_10kV', 'Ca.Ka.Area_10kV', 'Ti.Ka.Area_10kV', 'Cr.Ka.Area_10kV',
+                             'Mn.Ka.Area_10kV', 'Fe.Ka.Area_10kV', 'Rh.La.Coh.Area_10kV', 'inst'
+                             ) #rename column in xrf.data_10kV data
+
+U1583xrf.data_10kV<-subset(U1583xrf.data_10kV, tot_count > 0) #remove error on LIMS
+U1583xrf.data_10kV<-arrange(U1583xrf.data_10kV, depth.CCSF) #re-order dataframe for CCSD depth
+
+U1583xrf.data_30kV <- read.csv(file.choose())  #Import XRF 30kV data in CSV format
+U1583xrf.data_30kV<-U1583xrf.data_30kV[,c(1:10,20:41)] #select only usefull column
+colnames(U1583xrf.data_30kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','K.Ka.Area_30kV', 'Ca.Ka.Area_30kV', 'Ti.Ka.Area_30kV',
+                             'Mn.Ka.Area_30kV','Fe.Ka.Area_30kV', 'Co.Ka.Area_30kV', 'Ni.Ka.Area_30kV',
+                             'Cu.Ka.Area_30kV', 'Zn.Ka.Area_30kV', 'Ga.Ka.Area_30kV', 'As.Ka.Area_30kV',
+                             'Br.Ka.Area_30kV', 'Rb.Ka.Area_30kV', 'Sr.Ka.Area_30kV', 'Y.Ka.Area_30kV',
+                             'Zr.Ka.Area_30kV', 'Nb.Ka.Area_30kV', 'Mo.Ka.Area_30kV', 'Rh.Ka.Coh.Area_30kV',
+                             'Rh.Ka.Inc.Area_30kV','inst') #rename column in xrf.data_30kV data
+
+U1583xrf.data_30kV<-subset(U1583xrf.data_30kV, tot_count > 0) #remove tot count = 0
+U1583xrf.data_30kV<-arrange(U1583xrf.data_30kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+
+U1583xrf.data_50kV <- read.csv(file.choose())  #import xrf 50kV data in CSV format
+U1583xrf.data_50kV<-U1583xrf.data_50kV[,c(1:10,20:34)] #select only useful column
+colnames(U1583xrf.data_50kV) <- c('exp','site','hole','cor','Type','sect', 'A.W', 'offSet','depth.A','depth.CCSF',
+                             'tot_count','Ca.Ka.Area_50kV', 'Fe.Ka.Area_50kV', 'Ni.Ka.Area_50kV',
+                             'As.Ka.Area_50kV','Br.Ka.Area_50kV', 'Rb.Ka.Area_50kV', 'Sr.Ka.Area_50kV',
+                             'Y.Ka.Area_50kV', 'Zr.Ka.Area_50kV', 'Nb.Ka.Area_50kV', 'Mo.Ka.Area_50kV',
+                             'Ag.Ka.Area_50kV', 'Ba.Ka.Area_50kV', 'inst'
+                             ) #rename column in xrf.data_50kV data
+
+U1583xrf.data_50kV<-subset(U1583xrf.data_50kV, tot_count > 0)
+U1583xrf.data_50kV<-arrange(U1583xrf.data_50kV, depth.CCSF)#re-order dataframe for CCSD depth
+
+U1583xrf_10_30kV<-full_join(U1583xrf.data_10kV,U1583xrf.data_30kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF"))
+
+U1583xrf_10_30kV_50kV<-full_join(U1583xrf_10_30kV,U1583xrf.data_50kV, by = c("exp", "site", "hole", "cor", "Type", "sect", "A.W", "offSet", "depth.A", "depth.CCSF")) ### combining the data sheets from different voltages into a single sheet 
+
+```
+
+
+## Data Quality control
+XRF data having high negative Ar values and (Total Counts per second) Throughput_10kV >150,000 represent good scans. Therefore we subset our data here to only include data from good scans. Other unnecessary data are subsetted into a separate dataset (not usable but just for reference).
+
+```{r XRF quality control}
+## U1556
+QAU1556Xrf <- subset(U1556xrf_10_30kV_50kV, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000) ## Quality controlled data
+ExU1556Xrf <- subset(U1556xrf_10_30kV_50kV, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000) ## Excluded data
+
+## U1557
+QAU1557Xrf <- subset(U1557xrf_10_30kV_50kV, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000)
+ExU1557Xrf <- subset(U1557xrf_10_30kV_50kV, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000)
+
+## U1558
+QAU1558Xrf <- subset(U1558xrf_10_30kV_50kV_1, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000) 
+ExU1558Xrf <- subset(U1558xrf_10_30kV_50kV_1, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000) 
+
+## U1559
+QAU1559Xrf <- subset(U1559xrf_10_30kV_50kV, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000)
+ExU1559Xrf <- subset(U1559xrf_10_30kV_50kV, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000)
+
+## U1560
+QAU1560Xrf <- subset(U1560xrf_10_30kV_50kV_1, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000)
+ExU1560Xrf <- subset(U1560xrf_10_30kV_50kV_1, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000)
+
+## U1561
+QAU1561Xrf <- subset(U1561xrf_10_30kV_50kV, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000)
+ExU1561Xrf <- subset(U1561xrf_10_30kV_50kV, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000)
+
+## U1583
+QAU1583Xrf <- subset(U1583xrf_10_30kV_50kV, Ar.Ka.Area_10kV < 0 & tot_count.x >= 150000) 
+ExU1583Xrf <- subset(U1583xrf_10_30kV_50kV, Ar.Ka.Area_10kV >= 0 & tot_count.x < 150000)
+```
+
+## Export data files
+This step will export the cleaned and processed XRF files into their respective site excel sheets.
+
+```{r export sheets}
+
+write.csv(QAU1556Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1556.csv")
+write.csv(QAU1557Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1557.csv")
+write.csv(QAU1558Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1558.csv")
+write.csv(QAU1559Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1559.csv")
+write.csv(QAU1560Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1560.csv")
+write.csv(QAU1561Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1561.csv")
+write.csv(QAU1583Xrf, "H:/.shortcut-targets-by-id/1PS-zG3CHKC3WqvWMIt7Tm5Nxxln2Dao8/Ravi Research/Data Analysis/XRF IODP 390-393/QC_Splice_U1583.csv")
+
+```
+
+## Code for plots 
+# Magnetic Suspectibility vs. Depth
+This code prepares magnetic susceptibility data from different sites to plot vs. CCSF depth.
+
+```{r code MS data plot}
+
+## U1556
+U1556ms<-ggplot(U1556ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8) )
+
+## U1557
+U1557ms<-ggplot(U1557ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+
+## U1558
+U1558ms<-ggplot(U1558ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+
+## U1559
+U1559ms<-ggplot(U1559ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+
+
+## U1560
+U1560ms<-ggplot(U1560ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+
+## U1561
+U1561ms<-ggplot(U1561ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+
+## U1583
+U1583ms<-ggplot(U1583ms.data, aes(x=ms,y=depth.CCSF))+
+  geom_path(color="red3", size=0.3)+
+  scale_x_continuous(limits=c(0,NA), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Magnetic \n Susceptibility")+
+  ylab("Depth CCSF (m)")+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.text.y = element_text(colour = "black", hjust =0.5, size=6),
+        plot.title = element_text(hjust =0.5, size=0.3), axis.title = element_text(hjust =0.5, size=8))
+```
+
+# NGR vs. Depth
+This code prepares NGR data from different sites to plot vs. CCSF depth.
+
+```{r code NGR data plot}
+
+## U1556
+U1556ngr<-ggplot(U1556ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,12), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0),breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1557
+U1557ngr<-ggplot(U1557ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1558
+U1558ngr<-ggplot(U1558ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,6), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0),breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1559
+U1559ngr<-ggplot(U1559ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,4), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0),breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1560
+U1560ngr<-ggplot(U1560ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,4), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0),breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1561
+U1561ngr<-ggplot(U1561ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,8), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0),breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1583
+U1583ngr<-ggplot(U1583ngr.data)+
+  geom_path(aes(x=ngr.u,y=depth.CCSF, color="U (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.th,y=depth.CCSF, color="Th (ppm)"), size=0.3)+
+  geom_path(aes(x=ngr.k,y=depth.CCSF, color="K (%)"), size=0.3)+
+  scale_color_manual("", breaks=c("U (ppm)", "Th (ppm)", "K (%)"),
+                     values = c("orange2","dodgerblue3","seagreen3"))+
+  scale_x_continuous(limits=c(0,8), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0),breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Natural Gamma \n Ray")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2), axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+```
+
+## Elemental count variations vs. depth
+This code prepares elemental counts data from different sites to plot vs. CCSF depth.
+
+```{r code elemental counts plot}
+
+## U1556
+U1556Ca<-ggplot(QAU1556Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556Fe<-ggplot(QAU1556Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556Ti<-ggplot(QAU1556Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556Al<-ggplot(QAU1556Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556Si<-ggplot(QAU1556Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556K<-ggplot(QAU1556Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1556Zr<-ggplot(QAU1556Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(325,0), breaks = seq(330,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1557
+U1557Ca<-ggplot(QAU1557Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557Fe<-ggplot(QAU1557Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557Ti<-ggplot(QAU1557Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557Al<-ggplot(QAU1557Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557Si<-ggplot(QAU1557Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557K<-ggplot(QAU1557Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1557Zr<-ggplot(QAU1557Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(562,0), breaks = seq(570,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1558
+U1558Ca<-ggplot(QAU1558Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+U1558Fe<-ggplot(QAU1558Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(), legend.position= c(0.705,0.05), legend.spacing.y = unit(0, "mm"), legend.spacing.x = unit(0.2, "mm"), legend.margin = margin(0.05,0.05,0.05,0.05, "cm"), legend.background = element_blank(), legend.text=element_text(size=4), legend.title = element_blank(), legend.box.background = element_rect(colour = "black", size=0.2), legend.key = element_rect(fill = NA, color = NA), legend.key.size = unit(0.4,"line"),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+U1558Ti<-ggplot(QAU1558Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+U1558Al<-ggplot(QAU1558Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+U1558Si<-ggplot(QAU1558Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+U1558K<-ggplot(QAU1558Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+U1558Zr<-ggplot(QAU1558Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(aes(color=inst.x), na.rm = TRUE, size=0.3)+
+  scale_color_manual(values = c("gray8", "blue4"))+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(208,0), breaks = seq(210,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5), legend.position = "none")
+
+## U1559
+U1559Ca<-ggplot(QAU1559Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559Fe<-ggplot(QAU1559Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559Ti<-ggplot(QAU1559Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559Al<-ggplot(QAU1559Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559Si<-ggplot(QAU1559Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559K<-ggplot(QAU1559Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1559Zr<-ggplot(QAU1559Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(72,0), breaks = seq(80,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1560
+U1560Ca<-ggplot(QAU1560Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560Fe<-ggplot(QAU1560Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560Ti<-ggplot(QAU1560Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560Al<-ggplot(QAU1560Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560Si<-ggplot(QAU1560Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560K<-ggplot(QAU1560Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1560Zr<-ggplot(QAU1560Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(140,0), breaks = seq(140,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1561
+U1561Ca<-ggplot(QAU1561Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561Fe<-ggplot(QAU1561Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561Ti<-ggplot(QAU1561Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561Al<-ggplot(QAU1561Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561Si<-ggplot(QAU1561Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561K<-ggplot(QAU1561Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1561Zr<-ggplot(QAU1561Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(48,0), breaks = seq(50,0, by= -2), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+## U1583
+U1583Ca<-ggplot(QAU1583Xrf, aes(x=Ca.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ca \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+
+U1583Fe<-ggplot(QAU1583Xrf, aes(x=Fe.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous(sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Fe \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1583Ti<-ggplot(QAU1583Xrf, aes(x=Ti.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10),  sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Ti \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1583Al<-ggplot(QAU1583Xrf, aes(x=Al.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Al \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1583Si<-ggplot(QAU1583Xrf, aes(x=Si.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Si \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1583K<-ggplot(QAU1583Xrf, aes(x=K.Ka.Area_10kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("K \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5) )
+
+U1583Zr<-ggplot(QAU1583Xrf, aes(x=Zr.Ka.Area_30kV,y=depth.CCSF))+
+  geom_path(color="gray8", na.rm = TRUE, size=0.3)+
+  geom_vline(aes(xintercept=0), color="black", size=0.3)+
+  scale_x_continuous( sec.axis = dup_axis(name = NULL, labels = NULL), expand = c(0,0), position ="top", labels = comma)+
+  scale_y_reverse(limits=c(138,0), breaks = seq(140,0, by= -10), expand = c(0,0))+
+  coord_cartesian(clip = "off") +
+  xlab("Zr \n (counts)")+
+  ylab(NULL)+
+  theme(plot.margin = unit(c(0.2,0.1,0.2,0.1), "cm"), panel.border = element_rect(colour = "black",fill=NA, size=0.2), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), panel.background = element_blank(),
+        axis.text.x.top = element_text(colour = "black", hjust =0.5, size=6, angle = 90, vjust=0.3), axis.ticks = element_line(colour = "black", size=0.2),
+        axis.title = element_text(hjust =0.5, size=8) ,
+        plot.title = element_text(hjust =0.5))
+```
+
+## Scatter plots
+Scatter plots essentially portray the distribution of the elemental counts under consideration. They are only different from Correlorgams in the fact that they take up much more space.
+
+```{r scatter plots, fig.height=12, fig.width=10}
+
+## U1556
+SP_Fe_ca_U1556 <- ggplot(QAU1556Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1556")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1556 <- ggplot(QAU1556Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1556")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1556 <- ggplot(QAU1556Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+ scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1556")+geom_smooth(method = lm)
+
+SP_Si_ca_U1556 <- ggplot(QAU1556Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1556")+geom_smooth(method = lm)
+
+SP_K_Fe_U1556 <- ggplot(QAU1556Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1556")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1556 <- ggplot(QAU1556Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1556")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1556 <- ggplot(QAU1556Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1556")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1556 <- ggplot(QAU1556Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1556")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1556 <- ggplot(QAU1556Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1556")+geom_smooth(method = lm)
+
+SP_U1556 <- ggarrange(SP_Fe_ca_U1556, SP_Ti_Fe_U1556, SP_Al_Ar_U1556, SP_Si_ca_U1556, SP_K_Fe_U1556, SP_Ti_ca_U1556, SP_Si_Ti_U1556, SP_Ba_Br_U1556, SP_Sr_ca_U1556, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1556
+
+## U1557
+SP_Fe_ca_U1557 <- ggplot(QAU1557Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1557")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1557 <- ggplot(QAU1557Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1557")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1557 <- ggplot(QAU1557Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1557")+geom_smooth(method = lm)
+
+SP_Si_ca_U1557 <- ggplot(QAU1557Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1557")+geom_smooth(method = lm)
+
+SP_K_Fe_U1557 <- ggplot(QAU1557Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1557")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1557 <- ggplot(QAU1557Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1557")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1557 <- ggplot(QAU1557Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1557")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1557 <- ggplot(QAU1557Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1557")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1557 <- ggplot(QAU1557Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1557")+geom_smooth(method = lm)
+
+SP_U1557 <- ggarrange(SP_Fe_ca_U1557, SP_Ti_Fe_U1557, SP_Al_Ar_U1557, SP_Si_ca_U1557, SP_K_Fe_U1557, SP_Ti_ca_U1557, SP_Si_Ti_U1557, SP_Ba_Br_U1557, SP_Sr_ca_U1557, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1557
+
+## U1558
+SP_Fe_ca_U1558 <- ggplot(QAU1558Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1558")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1558 <- ggplot(QAU1558Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1558")+geom_smooth(method = lm)
+
+
+SP_Al_Ar_U1558 <- ggplot(QAU1558Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1558")+geom_smooth(method = lm)
+
+SP_Si_ca_U1558 <- ggplot(QAU1558Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1558")+geom_smooth(method = lm)
+
+SP_K_Fe_U1558 <- ggplot(QAU1558Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1558")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1558 <- ggplot(QAU1558Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1558")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1558 <- ggplot(QAU1558Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1558")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1558 <- ggplot(QAU1558Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1558")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1558 <- ggplot(QAU1558Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1558")+geom_smooth(method = lm)
+
+SP_U1558 <- ggarrange(SP_Fe_ca_U1558, SP_Ti_Fe_U1558, SP_Al_Ar_U1558, SP_Si_ca_U1558, SP_K_Fe_U1558, SP_Ti_ca_U1558, SP_Si_Ti_U1558, SP_Ba_Br_U1558, SP_Sr_ca_U1558, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1558
+
+## U1559
+SP_Fe_ca_U1559 <- ggplot(QAU1559Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1559")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1559 <- ggplot(QAU1559Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1559")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1559 <- ggplot(QAU1559Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1559")+geom_smooth(method = lm)
+
+SP_Si_ca_U1559 <- ggplot(QAU1559Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1559")+geom_smooth(method = lm)
+
+SP_K_Fe_U1559 <- ggplot(QAU1559Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1559")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1559 <- ggplot(QAU1559Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1559")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1559 <- ggplot(QAU1559Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1559")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1559 <- ggplot(QAU1559Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1559")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1559 <- ggplot(QAU1559Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1559")+geom_smooth(method = lm)
+
+SP_U1559 <- ggarrange(SP_Fe_ca_U1559, SP_Ti_Fe_U1559, SP_Al_Ar_U1559, SP_Si_ca_U1559, SP_K_Fe_U1559, SP_Ti_ca_U1559, SP_Si_Ti_U1559, SP_Ba_Br_U1559, SP_Sr_ca_U1559, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1559
+
+## U1560
+SP_Fe_ca_U1560 <- ggplot(QAU1560Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1560")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1560 <- ggplot(QAU1560Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1560")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1560 <- ggplot(QAU1560Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1560")+geom_smooth(method = lm)
+
+SP_Si_ca_U1560 <- ggplot(QAU1560Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1560")+geom_smooth(method = lm)
+
+SP_K_Fe_U1560 <- ggplot(QAU1560Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1560")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1560 <- ggplot(QAU1560Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1560")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1560 <- ggplot(QAU1560Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1560")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1560 <- ggplot(QAU1560Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1560")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1560 <- ggplot(QAU1560Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1560")+geom_smooth(method = lm)
+
+SP_U1560 <- ggarrange(SP_Fe_ca_U1560, SP_Ti_Fe_U1560, SP_Al_Ar_U1560, SP_Si_ca_U1560, SP_K_Fe_U1560, SP_Ti_ca_U1560, SP_Si_Ti_U1560, SP_Ba_Br_U1560, SP_Sr_ca_U1560, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm"))
+SP_U1560
+
+## U1561
+SP_Fe_ca_U1561 <- ggplot(QAU1561Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1561")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1561 <- ggplot(QAU1561Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1561")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1561 <- ggplot(QAU1561Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1561")+geom_smooth(method = lm)
+
+SP_Si_ca_U1561 <- ggplot(QAU1561Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1561")+geom_smooth(method = lm)
+
+SP_K_Fe_U1561 <- ggplot(QAU1561Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1561")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1561 <- ggplot(QAU1561Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1561")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1561 <- ggplot(QAU1561Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1561")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1561 <- ggplot(QAU1561Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1561")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1561 <- ggplot(QAU1561Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1561")+geom_smooth(method = lm)
+
+SP_U1561 <- ggarrange(SP_Fe_ca_U1561, SP_Ti_Fe_U1561, SP_Al_Ar_U1561, SP_Si_ca_U1561, SP_K_Fe_U1561, SP_Ti_ca_U1561, SP_Si_Ti_U1561, SP_Ba_Br_U1561, SP_Sr_ca_U1561, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1561
+
+## U1583
+SP_Fe_ca_U1583 <- ggplot(QAU1583Xrf, aes(x = Fe.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) + geom_point()+labs(x="Fe-Counts", y="Ca-Counts", title = "Fe vs. Ca Counts U1583")+geom_smooth(method = lm)
+
+SP_Ti_Fe_U1583 <- ggplot(QAU1583Xrf, aes(x = Ti.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Fe-Counts", title = "Ti vs. Fe Counts U1583")+geom_smooth(method = lm)
+
+SP_Al_Ar_U1583 <- ggplot(QAU1583Xrf, aes(x = Al.Ka.Area_10kV, y = Ar.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(NA,0), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Al-Counts", y="Ar-Counts", title = "Al vs. Ar Counts U1583")+geom_smooth(method = lm)
+
+SP_Si_ca_U1583 <- ggplot(QAU1583Xrf, aes(x = Si.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ca-Counts", title = "Si vs Ca Counts U1583")+geom_smooth(method = lm)
+
+SP_K_Fe_U1583 <- ggplot(QAU1583Xrf, aes(x = K.Ka.Area_10kV, y = Fe.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="K-Counts", y="Fe-Counts", title = "K vs. Fe Counts U1583")+geom_smooth(method = lm)
+
+SP_Ti_ca_U1583 <- ggplot(QAU1583Xrf, aes(x = Ti.Ka.Area_10kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ti-Counts", y="Ca-Counts", title = "Ti vs. Ca Counts U1583")+geom_smooth(method = lm)
+
+SP_Si_Ti_U1583 <- ggplot(QAU1583Xrf, aes(x = Si.Ka.Area_10kV, y = Ti.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Si-Counts", y="Ti-Counts", title = "Si vs. Ti Counts U1583")+geom_smooth(method = lm)
+
+SP_Ba_Br_U1583 <- ggplot(QAU1583Xrf, aes(x = Ba.Ka.Area_50kV, y = Br.Ka.Area_30kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Ba-Counts", y="Br-Counts", title = "Ba vs. Br Counts U1583")+geom_smooth(method = lm)
+
+SP_Sr_ca_U1583 <- ggplot(QAU1583Xrf, aes(x = Sr.Ka.Area_30kV, y = Ca.Ka.Area_10kV))+
+  scale_x_continuous(limits=c(0,NA), labels = comma)+
+  scale_y_continuous(limits=c(0,NA), labels = comma)+
+  theme(axis.text.x = element_text(face = "bold", size = 7, angle = 45, vjust=0.6), plot.title = element_text(size = 10), axis.text.y = element_text(face = "bold", size = 7), panel.border = element_rect(colour = "black",fill=NA, size=0.2), plot.background = element_blank()) +geom_point()+labs(x="Sr-Counts", y="Ca-Counts", title = "Sr vs. Ca Counts U1583")+geom_smooth(method = lm)
+
+SP_U1583 <- ggarrange(SP_Fe_ca_U1583, SP_Ti_Fe_U1583, SP_Al_Ar_U1583, SP_Si_ca_U1583, SP_K_Fe_U1583, SP_Ti_ca_U1583, SP_Si_Ti_U1583, SP_Ba_Br_U1583, SP_Sr_ca_U1583, nrow = 3, ncol = 3, labels = "AUTO", font.label = list(size = 16, color = "red"), align = "hv")+theme(plot.margin = margin(0.5,0.5,2,0.5, "cm")) 
+SP_U1583
+
+```
+
+## Fig.3 Correlograms
+A correlogram is used to correlate the counts/normalized counts of the elements in consideration from a particular site. Elements whose counts are > 1000 are considered to make these plots. A R-squared value quantifies the relation between the two elements.
+
+```{r Correlograms plots, fig.height=10, fig.width=10 }
+
+## U1556
+Correlgrm_U1556 <- QAU1556Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1556) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1556 <- cor(Correlgrm_U1556, method = "spearman")
+corrplot(Corr_U1556, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1556",mar=c(0,0,1,0))
+
+## U1557
+Correlgrm_U1557 <- QAU1557Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1557) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1557 <- cor(Correlgrm_U1557, method = "spearman")
+corrplot(Corr_U1557, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1557",mar=c(0,0,1,0))
+
+## U1558
+Correlgrm_U1558 <- QAU1558Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1558) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1558 <- cor(Correlgrm_U1558, method = "spearman")
+corrplot(Corr_U1558, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1558",mar=c(0,0,1,0))
+
+## U1559
+Correlgrm_U1559 <- QAU1559Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1559) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1559 <- cor(Correlgrm_U1559, method = "spearman")
+corrplot(Corr_U1559, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1559",mar=c(0,0,1,0))
+
+## U1560
+Correlgrm_U1560 <- QAU1560Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1560) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1560 <- cor(Correlgrm_U1560, method = "spearman")
+corrplot(Corr_U1560, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1560",mar=c(0,0,1,0))
+
+## U1561
+Correlgrm_U1561 <- QAU1561Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1561) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1561 <- cor(Correlgrm_U1561, method = "spearman")
+corrplot(Corr_U1561, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1561",mar=c(0,0,1,0))
+
+## U1583
+Correlgrm_U1583 <- QAU1583Xrf[,c(13,14,16,19,20,21,23,24,34,39,41,43,62)]
+colnames(Correlgrm_U1583) <- c('Al_10kV','Si_10kV','S_10kV','K_10kV','Ca_10kV','Ti_10kV','Mn_10kV','Fe_10kV','Ni_30kV','Br_30kV','Sr_30kV','Zr_30kV','Ba_50kV')
+Corr_U1583 <- cor(Correlgrm_U1583, method = "spearman")
+corrplot(Corr_U1583, type = "upper", method = 'ellipse', order="hclust", col = viridis(200), tl.col = "black",tl.srt = 90, addCoef.col = "black", number.cex = 0.5,title = "Correlogram Site U1583",mar=c(0,0,1,0))
+
+```
+
+
+
+## Fig.4 Variation plots
+This chunk of code put together the data concerning all the variations in MS, NGR and XRF data and plots them in a single figure.
+
+```{r Fig.4 plots, fig.height=10, fig.width=10}
+
+## U1556
+U1556XRFdepth<- ggarrange(U1556ms, U1556ngr + rremove("y.text"), U1556Ca + rremove("y.text"), U1556Fe + rremove("y.text"), U1556Ti + rremove("y.text"), U1556Al + rremove("y.text"), U1556Si + rremove("y.text"), U1556K + rremove("y.text"), U1556Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1556XRFdepth
+
+## U1557
+U1557XRFdepth<- ggarrange(U1557ms, U1557ngr + rremove("y.text"), U1557Ca + rremove("y.text"), U1557Fe + rremove("y.text"), U1557Ti + rremove("y.text"), U1557Al + rremove("y.text"), U1557Si + rremove("y.text"), U1557K + rremove("y.text"), U1557Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1557XRFdepth
+
+## U1558
+U1558XRFdepth<- ggarrange(U1558ms, U1558ngr + rremove("y.text"), U1558Ca + rremove("y.text"), U1558Fe + rremove("y.text"), U1558Ti + rremove("y.text"), U1558Al + rremove("y.text"), U1558Si + rremove("y.text"), U1558K + rremove("y.text"), U1558Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1558XRFdepth
+
+## U1559
+U1559XRFdepth<- ggarrange(U1559ms, U1559ngr + rremove("y.text"), U1559Ca + rremove("y.text"), U1559Fe + rremove("y.text"), U1559Ti + rremove("y.text"), U1559Al + rremove("y.text"), U1559Si + rremove("y.text"), U1559K + rremove("y.text"), U1559Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1559XRFdepth
+
+## U1560
+U1560XRFdepth<- ggarrange(U1560ms, U1560ngr + rremove("y.text"), U1560Ca + rremove("y.text"), U1560Fe + rremove("y.text"), U1560Ti + rremove("y.text"), U1560Al + rremove("y.text"), U1560Si + rremove("y.text"), U1560K + rremove("y.text"), U1560Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1560XRFdepth
+
+## U1561
+U1561XRFdepth<- ggarrange(U1561ms, U1561ngr + rremove("y.text"), U1561Ca + rremove("y.text"), U1561Fe + rremove("y.text"), U1561Ti + rremove("y.text"), U1561Al + rremove("y.text"), U1561Si + rremove("y.text"), U1561K + rremove("y.text"), U1561Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1561XRFdepth
+
+## U1583
+U1583XRFdepth<- ggarrange(U1583ms, U1583ngr + rremove("y.text"), U1583Ca + rremove("y.text"), U1583Fe + rremove("y.text"), U1583Ti + rremove("y.text"), U1583Al + rremove("y.text"), U1583Si + rremove("y.text"), U1583K + rremove("y.text"), U1583Zr + rremove("y.text"), ncol = 9, align = "h", widths = c(1.36,1,1,1,1,1,1,1,1), labels = "AUTO", font.label = list(size = 7, color = "magenta4"))
+U1583XRFdepth
+
+```
